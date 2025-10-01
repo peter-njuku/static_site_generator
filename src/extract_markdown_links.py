@@ -2,20 +2,19 @@ import re
 
 from textnode import TextNode, TextType
 
-def extract_markdown_images(text):
-    text = re.sub(r"```.*?```", "", text, flags=re.DOTALL)
-    images = re.findall(r"!\[([^\[\]]*)\]\(((?:[^()]|\([^()]*\))*)\)", text)
-    
-    return tuple(images)
 
-def split_node_images(old_nodes):
+def extract_markdown_links(text):
+    links = re.findall(r"(?<!!)\[([^\[\]]*)\]\(((?:[^()]|\([^()]*\))*)\)", text)
+    return tuple(links)
+
+def split_node_links(old_nodes):
     new_nodes = []
     for node in old_nodes:
         if node.text_type != TextType.PLAIN_TEXT:
             new_nodes.append(node)
             continue
         text = node.text
-        matches = list(re.finditer(r"!\[([^\]]+)\]\(([^)\s]+)\)", text))
+        matches = list(re.finditer(r"\[([^\]]+)\]\(([^)]+)\)", text))
         if not matches:
             new_nodes.append(node)
             continue
@@ -28,7 +27,7 @@ def split_node_images(old_nodes):
             if current_pos < start:
                 new_nodes.append(TextNode(text[current_pos:start], TextType.PLAIN_TEXT))
             
-            new_nodes.append(TextNode(link_text, TextType.IMAGES, url))
+            new_nodes.append(TextNode(link_text, TextType.LINKS, url))
             current_pos = end
 
         if current_pos < len(text):
